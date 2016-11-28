@@ -23,7 +23,7 @@ Below are GIFs from the [TGIF] dataset, and GCNet's generated captions for them.
 
 ## Output
 
-1. Next word of the in-progress GIF caption. See Obtaining a Caption with GCNet for more details.
+1. Next word of the in-progress GIF caption. See [Obtaining a Caption with GCNet](#obtaining-a-caption-with-gcnet) for more details.
 
 
 ## Overview
@@ -109,14 +109,22 @@ Depending on your GPU, this step can take a while. On a GTX 1080, it takes about
 <img src="./imgs/prepareGifs.png" alt="GCNet Precompute GIF Frame's VGG16 Output" width="980">
 
 ## 7. Running GCNet
-If you changed any of the variables in either step 5 or 6, then you will need to change the corresponding variables in `gcnet.py`
+If you changed any of the variables in either step 5 or 6, then you will need to change the corresponding variables in `gcnet.train.py`
 
 This will load all precomputed data, build GCNet, expand the data (see figure below), and start training.
 
 1. `python -i gcnet.train.py`
 
 ### Data Expansion
+
 <img src="./imgs/expandCaptions.png" alt="GCNet Expand GIF Captions" width="980">
+
+There is an error in the above figure, it should include the empty subcaption (for i from 0 to #captionLength - 1): 
+
+Prepending these to the example lists:
+
+X: [0, 0, ... 0]
+Y: [1]
 
 ## 8. Test Trained GCNet
 If you changed any of the variables in either step 5 or 6, then you will need to change the corresponding variables in `gcnet.test.py`
