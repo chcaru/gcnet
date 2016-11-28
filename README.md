@@ -16,24 +16,26 @@ Below are GIFs from the [TGIF] dataset, and GCNet's generated captions for them.
 
 # Architecture
 
-### Input
+## Input
 1. GIF frames' precomputed VGG16 output (TODO: Create standalone GCNet that doesn't require precomputation)
 2. In-progress GIF caption. This is a subcaption of the full caption (or the to be caption outside of training). See Setup Step 7, Data Expansion. See Obtaining a Caption with GCNet for more details. 
 
-### Output
+## Output
 1. Next word of the in-progress GIF caption. See Obtaining a Caption with GCNet for more details.
 
+
+## Overview
 GCNet can be thought of as computing: P(next word in caption | GIF, in-progress caption)
 
 <img src="./imgs/gcnetOverview.png" alt="GCNet Architecture Overview" width="980">
 
 ## Obtaining a Caption with GCNet
-GCNet generates a GIF's caption iteratively, requiring the GIF and its in-progress caption to be run through GCNet the number of times there are words in the caption. This is because GCNet computes the next word given an input GIF and in-progress caption. The first iteration's in-progress caption will consist of empty word indices (all zeros), producing the first word in the caption. This, along with the same GIF is fed back into GCNet, producing the second word, and so on... until the in-progress caption is at the caption's max length - 1, producing the last word in the caption. 
-
-(TODO: Create standalone `gcnet.py` that takes a GIF file name as input from the command line and prints out the caption for the GIF. It will also download pretrained GCNet weights.)
+GCNet generates a GIF's caption iteratively, requiring the GIF and its in-progress caption to be run through GCNet the number of times there are words in the caption. This is because GCNet computes the next word given an input GIF and in-progress caption. The first iteration's in-progress caption will consist of empty word indices (all zeros), producing the first word in the caption. This word becomes part of the in-progress caption, and is fed back into GCNet along with the same GIF, producing the second word, and so on... until the in-progress caption is at the caption's max length - 1, producing the last word in the caption. This results in the in-progress caption becoming the final generated caption for the given GIF. 
 
 1. For right now, all input needs to be precomputed. Steps to do this are in the Setup section. 
 2. For right now, once precomputed inputs are produced, use `gcnet.test.py` by changing the precomputed file references to your own.
+
+(TODO: Create standalone `gcnet.py` that takes a GIF file name as input from the command line and prints out the caption for the GIF. It will also download pretrained GCNet weights.)
 
 ## Pretrained components
 1. ImageNet Trained [VGG16]
@@ -88,7 +90,7 @@ This will attempt to normalize the captions by removing unneeded punctuation and
 <img src="./imgs/filterCaptions.png" alt="GCNet Compute Vocab and Embedding Matrix" width="980">
 <img src="./imgs/computeCaptionVectors.png" alt="GCNet Compute GIF Caption Vectors" width="980">
 
-## 6. Precompute GIF frame's VGG16 output
+## 6. Precompute GIF frames' VGG16 output
 Depending on your GPU, this step can take a while. On a GTX 1080, it takes about 3 hours using default settings (~1.65M images). Saves precomputed [VGG16] GIF frames to `precomputedVGG16Frames.#gifFrames.npy` (~6GB)
 1. `python -i precomputeVGG16.py`
 
