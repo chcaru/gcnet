@@ -19,7 +19,7 @@ Below are GIFs from the [TGIF] dataset, and GCNet's generated captions for them.
 ## Input
 
 1. GIF frames' precomputed VGG16 output (TODO: Create standalone GCNet that doesn't require precomputation)
-2. In-progress GIF caption. This is a subcaption of the full caption (or the to be caption outside of training). See Setup Step 7, Data Expansion. See Obtaining a Caption with GCNet for more details. 
+2. In-progress GIF caption. This is a subcaption of the full caption (or the to be caption outside of training). See [Setup Step 7 - Data Expansion](#data-expansion). See [Obtaining a Caption with GCNet](#obtaining-a-caption-with-gcnet) for more details. 
 
 ## Output
 
