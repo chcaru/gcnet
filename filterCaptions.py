@@ -148,7 +148,7 @@ for i in range(len(captions)):
     encodedCaptions[numKept][0] = int(captionIds[i])
     encodedCaptions[numKept][1:len(indices)+1] = indices
 
-    filtedCaptionsFile.write(str(i) + ' ' + (' '.join(map(indexToWord, indices))) + '\n')
+    filtedCaptionsFile.write(str(captionIds[i]) + ' ' + (' '.join(map(indexToWord, indices))) + '\n')
 
     numKept += 1
 
