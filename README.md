@@ -18,7 +18,7 @@ Below are GIFs from the [TGIF] dataset, and GCNet's generated captions for them.
 
 ## Input
 
-1. GIF frames' precomputed VGG16 output (TODO: Create standalone GCNet that doesn't require precomputation)
+1. GIF frames' precomputed VGG16 output ([TODO: Create Standalone GCNet that doesn't require precomputation](#standalone-gcnet))
 2. In-progress GIF caption. This is a subcaption of the full caption (or the to be caption outside of training). See [Setup Step 7 - Data Expansion](#data-expansion). See [Obtaining a Caption with GCNet](#obtaining-a-caption-with-gcnet) for more details. 
 
 ## Output
@@ -39,7 +39,7 @@ GCNet generates a GIF's caption iteratively, requiring the GIF and its in-progre
 1. For right now, all input needs to be precomputed. Steps to do this are in the Setup section. 
 2. For right now, once precomputed inputs are produced, use `gcnet.test.py` by changing the precomputed file references to your own.
 
-(TODO: Create standalone `gcnet.py` that takes a GIF file name as input from the command line and prints out the caption for the GIF. It will also download pretrained GCNet weights.)
+([TODO: Standalone GCNet](#standalone-gcnet))
 
 ## Pretrained components
 
@@ -130,16 +130,31 @@ Provide a list of GIF urls and corresponding captions with the following data fo
 
 Each new line will contain:
 
-`gif-url gif-caption` (such that `gif-url` and `gif-caption` are separated by a tab)
+`gif-url	gif-caption` (such that `gif-url` and `gif-caption` are separated by a tab)
 
 For example:
 
 ```
-http://doggif.gif a dog playing catch
-http://catgif.gif a cat walking around
+http://doggif.gif	a dog playing catch
+http://catgif.gif	a cat walking around
 ```
 
 Above are instructions for obtaining a dataset that meets this format. (GCNet does not require the above dataset as long as the aforementioned data format is followed)
+
+# Acknowledged Issues
+
+- TODO: Detail all outstanding issues here.
+
+## Standalone GCNet
+- TODO: Create standalone `gcnet.py` that takes a GIF file name as input from the command line and prints out GCNet's generated caption for the GIF. It will also download pretrained GCNet weights. This should allow people to skip all [Setup](#setup) steps.
+
+# Future Work
+
+- TODO: Describe planned future iterations and room for improvement.
+
+# WIP
+
+This is a work in progress. If you notice something is wrong, please let me know, and I'll fix it when I get the chance! Thanks!
 
    [GloVe]: <http://nlp.stanford.edu/projects/glove/>
    [VGG16]: <https://arxiv.org/abs/1409.1556>
