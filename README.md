@@ -107,6 +107,7 @@ This will load all precomputed data, build GCNet, expand the data (see figure be
 
 ## 8. Test Trained GCNet
 If you changed any of the variables in either step 5 or 6, then you will need to change the corresponding variables in `gcnet.test.py`
+
 1. Set `PRETRAINED_WEIGHTS` in `gcnet.test.py` to the location of your trained weights file
 2. `python -i gcnet.test.py`
 3. Enjoy!
