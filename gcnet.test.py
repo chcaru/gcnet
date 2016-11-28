@@ -92,6 +92,7 @@ def generateCaption(oneHotCaption, oneHot=True):
 
     return caption
 
+# Within the last 625 GIFs used for validation only.
 numValidation = 256
 batchSize = 128
 

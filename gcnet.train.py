@@ -70,6 +70,7 @@ model.compile(loss='sparse_categorical_crossentropy',
     metrics=['accuracy'])
 model.summary()
 
+# At the very least, the last 625 GIFs, assuming 16 GIF frames.
 numValidation = 10000
 numEpochs = 100
 batchSize = 256
