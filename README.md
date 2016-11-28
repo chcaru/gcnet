@@ -17,19 +17,23 @@ Below are GIFs from the [TGIF] dataset, and GCNet's generated captions for them.
 # Architecture
 
 ## Input
+
 1. GIF frames' precomputed VGG16 output (TODO: Create standalone GCNet that doesn't require precomputation)
 2. In-progress GIF caption. This is a subcaption of the full caption (or the to be caption outside of training). See Setup Step 7, Data Expansion. See Obtaining a Caption with GCNet for more details. 
 
 ## Output
+
 1. Next word of the in-progress GIF caption. See Obtaining a Caption with GCNet for more details.
 
 
 ## Overview
+
 GCNet can be thought of as computing: P(next word in caption | GIF, in-progress caption)
 
 <img src="./imgs/gcnetOverview.png" alt="GCNet Architecture Overview" width="980">
 
 ## Obtaining a Caption with GCNet
+
 GCNet generates a GIF's caption iteratively, requiring the GIF and its in-progress caption to be run through GCNet the number of times there are words in the caption. This is because GCNet computes the next word given an input GIF and in-progress caption. The first iteration's in-progress caption will consist of empty word indices (all zeros), producing the first word in the caption. This word becomes part of the in-progress caption, and is fed back into GCNet along with the same GIF, producing the second word, and so on... until the in-progress caption is at the caption's max length - 1, producing the last word in the caption. This results in the in-progress caption becoming the final generated caption for the given GIF. 
 
 1. For right now, all input needs to be precomputed. Steps to do this are in the Setup section. 
@@ -38,6 +42,7 @@ GCNet generates a GIF's caption iteratively, requiring the GIF and its in-progre
 (TODO: Create standalone `gcnet.py` that takes a GIF file name as input from the command line and prints out the caption for the GIF. It will also download pretrained GCNet weights.)
 
 ## Pretrained components
+
 1. ImageNet Trained [VGG16]
 2. Stanford's [GloVe] Word Vectors (840B tokens, 2.2M vocab, 300D)
 
@@ -46,6 +51,7 @@ GCNet generates a GIF's caption iteratively, requiring the GIF and its in-progre
 From start to finish, this will take at least 6 hours if you have a gigabit internet connection, fast processor, a lot of memory (at least 64GB), and a good GPU :)
 
 ## 0. Requirements
+
 - [Keras]
 - [Theano] / [TensorFlow] (as [Keras Backend])
 - GPU (optional, but HIGHLY recommended)
@@ -55,6 +61,7 @@ From start to finish, this will take at least 6 hours if you have a gigabit inte
 
 
 ## 1. Provide Dataset
+
 1. `mkdir data`
 2. Place a dataset with the Data Format requirements described at the bottom of the page in the Data Format section into `./data/gif-url-captions.tsv` 
 
@@ -65,6 +72,7 @@ OR, if you don't have your own dataset, you may choose to use this dataset ([TGI
 
 ## 2. Download
 This will download all GIFs in the above dataset. If using [TGIF] as your dataset, this is ~120GB. Make sure you have enough room!
+
 1. `mkdir gifs` 
 2. `node download.js` 
 
@@ -75,14 +83,17 @@ This will download all GIFs in the above dataset. If using [TGIF] as your datase
 This will split, resize, and save the resulting GIF frames such that for every GIF `./gifs/X.gif` with `N` frames, it will create frame PNGs `./gifs/X/X_[0..N].png`.
 
 This doubles the size of the data, to ~250GB. If you would like to in place remove processed GIFs (keep size at ~120GB), then you must set `removeProcessedGifs = True` in `prepareGifs.py`
+
 1. `python -i prepareGifs.py`
 
 ## 4. Clean Captions
 This will attempt to normalize the captions by removing unneeded punctuation and expressions, saving them to `./clean.captions.txt`
+
 1. `python -i cleanCaptions.py`
 
 ## 5. Filter Captions
 `filterCaptions.py` will compute the vocab (and save to `vocab.#vocabSize.txt`), compute the embedding matrix (and save to `embeddingMatrix.#vocabSize.npy`), filter out captions that are low quality (default < 90% of words in caption are in vocab), and finally compute vocab indexed captions (and save to `dataY.captions.#captionLength.npy`)
+
 1. `wget http://nlp.stanford.edu/data/glove.840B.300d.zip -O ./data/glove.840B.300d.zip`
 2. `unzip ./data/glove.840B.300d.zip -d ./data/glove`
 3. `python -i filterCaptions.py`
@@ -92,6 +103,7 @@ This will attempt to normalize the captions by removing unneeded punctuation and
 
 ## 6. Precompute GIF frames' VGG16 output
 Depending on your GPU, this step can take a while. On a GTX 1080, it takes about 3 hours using default settings (~1.65M images). Saves precomputed [VGG16] GIF frames to `precomputedVGG16Frames.#gifFrames.npy` (~6GB)
+
 1. `python -i precomputeVGG16.py`
 
 <img src="./imgs/prepareGifs.png" alt="GCNet Precompute GIF Frame's VGG16 Output" width="980">
@@ -100,6 +112,7 @@ Depending on your GPU, this step can take a while. On a GTX 1080, it takes about
 If you changed any of the variables in either step 5 or 6, then you will need to change the corresponding variables in `gcnet.py`
 
 This will load all precomputed data, build GCNet, expand the data (see figure below), and start training.
+
 1. `python -i gcnet.train.py`
 
 ### Data Expansion
@@ -114,9 +127,17 @@ If you changed any of the variables in either step 5 or 6, then you will need to
 
 # Data Format
 Provide a list of GIF urls and corresponding captions with the following data format:
+
 Each new line will contain:
 
 `gif-url gif-caption` (such that `gif-url` and `gif-caption` are separated by a tab)
+
+For example:
+
+```
+http://doggif.gif a dog playing catch
+http://catgif.gif a cat walking around
+```
 
 Above are instructions for obtaining a dataset that meets this format. (GCNet does not require the above dataset as long as the aforementioned data format is followed)
 

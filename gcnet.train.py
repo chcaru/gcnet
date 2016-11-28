@@ -1,24 +1,17 @@
 print 'Loading dependencies...'
 
 import math, sys, time
-
-from keras.preprocessing.image import load_img, img_to_array
 import numpy as np
-from scipy.misc import imsave
-from scipy.optimize import fmin_l_bfgs_b
 
 from keras import backend as K
 from keras.applications import vgg16 as vgg16
 from keras.layers import Dense, Dropout, Input, Flatten, LSTM, TimeDistributed, RepeatVector, Embedding, merge, Bidirectional, Lambda
 from keras.models import Model
 
-TD = TimeDistributed
 Bi = Bidirectional
-
 _LSTM = LSTM
 LSTM = lambda s, rs=True, gb=False, ur=True: _LSTM(s, return_sequences=rs, consume_less='gpu', unroll=ur, go_backwards=gb)
 BLSTM = lambda s, rs=True, gb=False, ur=True: Bi(LSTM(s, rs, gb, ur))
-
 Sum = Lambda(lambda x: K.sum(x, axis=1), output_shape=lambda s: (s[0], s[2]))
 
 vocabSize = 6001
@@ -26,8 +19,8 @@ wordVectorSize = 300
 captionLength = 16
 gifFrames = 16
 
-print 'Building model...'
-imageInput = Input(shape=(gifFrames, 1000))
+print 'Building GCNet...'
+gifFramesVGG16 = Input(shape=(gifFrames, 1000))
 
 # Trained Word Embeddings
 embeddingMatrix = np.load('./embeddingMatrix.' + str(vocabSize - 1) + '.npy')
@@ -41,34 +34,34 @@ WordEmbedding = Embedding(input_dim=vocabSize,
 captionInput = Input(shape=(captionLength - 1,), dtype='int32')
 wordVectorizedCaption = WordEmbedding(captionInput) 
 
-dImageInput = Dropout(.15)(imageInput)
-gifEncoder = BLSTM(1024)(dImageInput)
+dGIFFramesVGG16 = Dropout(.15)(gifFramesVGG16)
+gifEncoder = BLSTM(1024)(dGIFFramesVGG16)
 gifEncoder = Dropout(.15)(gifEncoder)
 gifEncoder = LSTM(1024, rs=False)(gifEncoder)
 
-gifVggSum = Sum(imageInput)
+gifFramesVGG16Sum = Sum(gifFramesVGG16)
 
-encodedGif = merge([gifEncoder, gifVggSum], mode='concat')
+encodedGIF = merge([gifEncoder, gifFramesVGG16Sum], mode='concat')
 
-repeatedGifEncoding = RepeatVector(captionLength - 1)(encodedGif)
+repeatedEncodedGIF = RepeatVector(captionLength - 1)(encodedGIF)
 
-gifAndCaption = merge([wordVectorizedCaption, repeatedGifEncoding], mode='concat')
+concatenatedWordVectorsAndEncodedGIF = merge([wordVectorizedCaption, repeatedEncodedGIF], mode='concat')
 
-gifAndCaption = Dropout(.15)(gifAndCaption)
-gifCaptionEncoder = BLSTM(1024)(gifAndCaption)
+concatenatedWordVectorsAndEncodedGIF = Dropout(.15)(concatenatedWordVectorsAndEncodedGIF)
+gifCaptionEncoder = BLSTM(1024)(concatenatedWordVectorsAndEncodedGIF)
 gifCaptionEncoder = Dropout(.15)(gifCaptionEncoder)
 gifCaptionEncoder = LSTM(1024, rs=False)(gifCaptionEncoder)
 
-mergedEncoders = merge([gifCaptionEncoder, encodedGif], mode='concat')
+concatenatedEncoders = merge([gifCaptionEncoder, encodedGIF], mode='concat')
 
-mergedEncoders = Dropout(.15)(mergedEncoders)
-word = Dense(vocabSize, activation='softmax')(mergedEncoders)
+concatenatedEncoders = Dropout(.15)(concatenatedEncoders)
+nextWord = Dense(vocabSize, activation='softmax')(concatenatedEncoders)
 
-model = Model([imageInput, captionInput], word)
-model.compile(loss='sparse_categorical_crossentropy', 
+GCNet = Model([gifFramesVGG16, captionInput], nextWord)
+GCNet.compile(loss='sparse_categorical_crossentropy', 
     optimizer='rmsprop', 
     metrics=['accuracy'])
-model.summary()
+GCNet.summary()
 
 # At the very least, the last 625 GIFs, assuming 16 GIF frames.
 numValidation = 10000
@@ -76,7 +69,7 @@ numEpochs = 100
 batchSize = 256
 
 print 'Loading caption data...'
-dataYRaw = np.load('dataY.captions.16.npy')
+dataYRaw = np.load('dataY.captions.' + str(captionLength) + '.npy')
 
 expandedLen = len(dataYRaw) * captionLength
 dataX = np.zeros((expandedLen, captionLength-1), dtype='int32')
@@ -115,12 +108,12 @@ dataYWords = dataYWords.reshape((len(dataYWords), 1))
 dataYValWords = dataYValWords.reshape((len(dataYValWords), 1))
 
 print 'Loading precomputed VGG16 frames...'
-precomputedVGG16Frames = np.load('./precomputedVGG16Frames.16.npy')
+precomputedVGG16Frames = np.load('./precomputedVGG16Frames.' + str(gifFrames) + '.npy')
 
 numBatches = len(dataYWords) / batchSize + 1
 numValBatches = numValidation / batchSize + 1
 
-print 'Starting training...'
+print 'Start training...'
 for epoch in range(numEpochs):
 
     shuffleIndices = np.random.choice(np.arange(len(dataX)), len(dataX), False)
@@ -150,14 +143,12 @@ for epoch in range(numEpochs):
 
         batchImages = precomputedVGG16Frames[batchIDs]
 
-        result = model.train_on_batch([batchImages, batchCaptions], batchWords)
+        result = GCNet.train_on_batch([batchImages, batchCaptions], batchWords)
 
         tDelta = time.time() - tStart
-        if i > 0:
-            tTime += tDelta
-        elif i == 1:
+        if i == 1:
             tTime += 2 * tDelta
-        else:
+        elif i > 0:
             tTime += tDelta
 
         progress = int(math.floor(30.0 * (i+1) / numBatches))
@@ -189,7 +180,7 @@ for epoch in range(numEpochs):
 
         batchImages = precomputedVGG16Frames[batchIDs]
 
-        result = model.test_on_batch([batchImages, batchCaptions], batchWords)
+        result = GCNet.test_on_batch([batchImages, batchCaptions], batchWords)
 
         progress = int(math.floor(30.0 * (i+1) / numValBatches))
         progressBar = '\rValidation:\t' + str((i+1)*batchSize) + '/' + str(numValBatches*batchSize) + '\t[' + ('=' * progress) + ('>' if 0 < progress < 30 else '') + ('.' * (30 - progress)) + '] - loss: %f - acc: %f'%(tLoss/(i+1), tAcc/(i+1)) + '\t\t'  
@@ -201,4 +192,4 @@ for epoch in range(numEpochs):
         tAcc += result[1]
         i += 1
 
-    model.save_weights('model2.weights.acc' + str(round(tAcc/i * 100, 4)) + '_loss' + str(round(tLoss/i, 4)) + '_epoch' + str(epoch) + '.h5', True)
+    GCNet.save_weights('gcnet.weights.acc' + str(round(tAcc/i * 100, 4)) + '_loss' + str(round(tLoss/i, 4)) + '_epoch' + str(epoch) + '.h5', True)
