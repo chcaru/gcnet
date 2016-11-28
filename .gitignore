@@ -1,3 +1,17 @@
+
+# GCNet computed folders
+gifs/
+data/
+weights/
+
+# GCNet computed files
+*.npy
+*.txt
+*.h5
+
+# VSCode settings
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
