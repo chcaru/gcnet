@@ -1,4 +1,4 @@
-# Neural Network Generated GIF Captions | GCNet (GIF Caption Network)
+# GCNet (GIF Caption Network) | Neural Network Generated GIF Captions
 
 ## The goal of GCNet is to produce high quality GIF captions.
 
@@ -36,7 +36,7 @@ GCNet can be thought of as computing: P(next word in caption | GIF, in-progress 
 
 GCNet generates a GIF's caption iteratively, requiring the GIF and its in-progress caption to be run through GCNet the number of times there are words in the caption. This is because GCNet computes the next word given an input GIF and in-progress caption. The first iteration's in-progress caption will consist of empty word indices (all zeros), producing the first word in the caption. This word becomes part of the in-progress caption, and is fed back into GCNet along with the same GIF, producing the second word, and so on... until the in-progress caption is at the caption's max length - 1, producing the last word in the caption. This results in the in-progress caption becoming the final generated caption for the given GIF. 
 
-1. For right now, all input needs to be precomputed. Steps to do this are in the Setup section. 
+1. For right now, all input needs to be precomputed. Steps to do this are in [Setup](#setup). 
 2. For right now, once precomputed inputs are produced, use `gcnet.test.py` by changing the precomputed file references to your own.
 
 ([TODO: Standalone GCNet](#standalone-gcnet))
@@ -57,13 +57,13 @@ From start to finish, this will take at least 6 hours if you have a gigabit inte
 - GPU (optional, but HIGHLY recommended)
 - python 2.7 (recommended [Anaconda])
 - [node.js] 6.9.1
-- A dataset that follows the data format described at the bottom
+- A dataset that follows the [data format described at the bottom](#data-format)
 
 
 ## 1. Provide Dataset
 
 1. `mkdir data`
-2. Place a dataset with the Data Format requirements described at the bottom of the page in the Data Format section into `./data/gif-url-captions.tsv` 
+2. Place a dataset with the [Data Format](#data-format) requirements in `./data/gif-url-captions.tsv` 
 
 OR, if you don't have your own dataset, you may choose to use this dataset ([TGIF], [Kaggle]), please review their license! Follow the below steps to proceed with this option.
 
@@ -109,7 +109,7 @@ Depending on your GPU, this step can take a while. On a GTX 1080, it takes about
 <img src="./imgs/prepareGifs.png" alt="GCNet Precompute GIF Frame's VGG16 Output" width="980">
 
 ## 7. Running GCNet
-If you changed any of the variables in either step 5 or 6, then you will need to change the corresponding variables in `gcnet.train.py`
+If you changed any of the parameters in either step 5 or 6, then you will need to change the corresponding variables in `gcnet.train.py`
 
 This will load all precomputed data, build GCNet, expand the data (see figure below), and start training.
 
@@ -124,10 +124,11 @@ There is an error in the above figure, it should include the empty subcaption (f
 Prepending these to the example lists:
 
 X: [0, 0, ... 0]
+
 Y: [1]
 
 ## 8. Test Trained GCNet
-If you changed any of the variables in either step 5 or 6, then you will need to change the corresponding variables in `gcnet.test.py`
+If you changed any of the parameters in either step 5 or 6, then you will need to change the corresponding variables in `gcnet.test.py`
 
 1. Set `PRETRAINED_WEIGHTS` in `gcnet.test.py` to the location of your trained weights file
 2. `python -i gcnet.test.py`
@@ -151,14 +152,21 @@ Above are instructions for obtaining a dataset that meets this format. (GCNet do
 
 # Acknowledged Issues
 
-- TODO: Detail all outstanding issues here.
+1. Some GIFs when split into their frames produce artifacts, distortions, or are otherwise not ideal. This is a bug with Pillow. I'm open to suggestions. I looked at many options, and they all seemed to have their pros and cons. I stuck with Pillow because it seemed to be no worse than other options, and is just easy to use with Python. 
+2. Using the default 840B GloVe pretrained word vectors uses around 40GB of memory. To circumvent this, you may consider using one of GloVe's smaller pretrained word vectors. Otherwise, it is possible to change how word vectors are loaded, and be more efficient.
+3. GCNet parameters are spread across files. These should be consolidated into a single config.
+4. Sometimes the captions are just flat out wrong. This is typically because of #1. In the table above, those GIF's frames were split cleanly, and as you can tell, their resulting captions are just incredible. Otherwise, see [Future Work](#future-word) for details on how I plan to improve GCNet even more.
+5. It's difficult to run a single GIF through GCNet to see what caption is produces. See [Standalone GCNet](#standalone-gcnet).
 
 ## Standalone GCNet
-- TODO: Create standalone `gcnet.py` that takes a GIF file name as input from the command line and prints out GCNet's generated caption for the GIF. It will also download pretrained GCNet weights. This should allow people to skip all [Setup](#setup) steps.
+
+TODO: Create standalone `gcnet.py` that takes a GIF file name as input from the command line and prints out GCNet's generated caption for the GIF. It will also download pretrained GCNet weights. This should allow people to skip all [Setup](#setup) steps.
 
 # Future Work
 
-- TODO: Describe planned future iterations and room for improvement.
+1. The most obvious improvement I can think of would be passing through the convolutional output from VGG16 (before its fully connected layers) for each frame, in addition to the currently used VGG16 output. This is because VGG16 was only trained with static categories, and may not have specialized in more useful indicators for the purpose of understanding contextual actions.
+2. Curate a larger, more diverse, dataset. [TGIF] was great for a POC, but it is incredibly small (only ~100k GIFs). I'm looking forward to making a website that will allow people to submit GIFs w/ captions and allow the community to vote on the quality of other's submissions.
+3. Make a website that allows users to upload / link a GIF, return GCNet's generated caption, and then vote on the generated caption's accuracy. This would not only be great for people to sample GCNet, it would also collect amazing data that could be used with reinforcement learning.
 
 # WIP
 
